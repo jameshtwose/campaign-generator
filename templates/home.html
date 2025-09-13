@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campaign Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+  <div class="max-w-2xl mx-auto py-8">
+    <h1 class="text-3xl font-bold text-center mb-6">Campaign Generator</h1>
+
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+      <h2 class="text-xl font-semibold mb-2">Latest News</h2>
+      <form id="newsForm" class="mb-2">
+        <input id="newsTopic" type="text" class="w-full border rounded p-2 mb-2"
+          placeholder="Enter topic for news..." />
+        <input id="newsNumResults" type="number" min="1" max="20" value="5" class="w-full border rounded p-2 mb-2"
+          placeholder="Number of results" />
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Get Latest
+          News</button>
+      </form>
+      <div id="newsLoader" class="flex items-center gap-2 text-blue-500 hidden">
+        <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        Fetching news...
+      </div>
+      <ul id="newsResults" class="list-disc pl-5 text-gray-700"></ul>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+      <h2 class="text-xl font-semibold mb-2">Generate Questions</h2>
+      <form id="questionsForm" class="mb-2">
+        <textarea id="questionsInput" rows="4" class="w-full border rounded p-2 mb-2"
+          placeholder="Paste text to generate questions..."></textarea>
+        <select id="questionsModel" class="w-full border rounded p-2 mb-2">
+          <option value="gemma3:1b">Gemma 3 1B</option>
+          <option value="gpt-oss:20b">GPT-OSS 20B</option>
+        </select>
+        <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Generate
+          Questions</button>
+      </form>
+      <iframe id="questionsResult" class="w-full h-64 border rounded" style="background:white;"></iframe>
+      <div id="questionsLoader" class="flex items-center gap-2 text-green-500 hidden">
+        <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        Generating questions...
+      </div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+      <h2 class="text-xl font-semibold mb-2">Record & Upload Audio</h2>
+      <div class="flex gap-2 mb-2">
+        <button id="record" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Start Recording</button>
+        <button id="stop" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" disabled>Stop
+          Recording</button>
+      </div>
+      <div id="audioUploadResult" class="text-sm text-gray-700"></div>
+      <div id="audioUploadLoader" class="flex items-center gap-2 text-blue-500 hidden">
+        <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        Uploading audio...
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+      <h2 class="text-xl font-semibold mb-2">Transcribe Audio</h2>
+      <form id="transcribeForm" class="mb-2">
+        <input type="file" id="transcribeFile" accept="audio/*" class="mb-2" />
+        <button type="submit" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">Transcribe</button>
+      </form>
+      <div id="transcribeResult" class="text-sm text-gray-700 whitespace-pre-line"></div>
+      <div id="transcribeLoader" class="flex items-center gap-2 text-purple-500 hidden">
+        <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        Transcribing audio...
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+      <h2 class="text-xl font-semibold mb-2">Summarize Text</h2>
+      <form id="summarizeForm" class="mb-2">
+        <textarea id="summaryInput" rows="4" class="w-full border rounded p-2 mb-2"
+          placeholder="Paste text to summarize..."></textarea>
+        <select id="llmModel" class="w-full border rounded p-2 mb-2">
+          <option value="gemma3:1b">Gemma 3 1B</option>
+          <option value="gpt-oss:20b">GPT-OSS 20B</option>
+        </select>
+        <button type="submit" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Summarize</button>
+      </form>
+      <iframe id="summaryResult" class="w-full h-96 border rounded" style="background:white;"></iframe>
+      <div id="summarizeLoader" class="flex items-center gap-2 text-yellow-500 hidden">
+        <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        Summarizing text...
+      </div>
+      <button id="fullscreenSummaryBtn" class="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">View
+        Fullscreen</button>
+      <!-- Fullscreen Modal -->
+      <div id="summaryModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-3xl h-[80vh] flex flex-col">
+          <div class="flex justify-end p-2">
+            <button id="closeModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+          </div>
+          <iframe id="summaryModalFrame" class="flex-1 w-full rounded-b-lg" style="background:white;"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Latest news
+    const newsForm = document.getElementById('newsForm');
+    if (newsForm) {
+      newsForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const newsLoader = document.getElementById('newsLoader');
+        const newsResults = document.getElementById('newsResults');
+        newsResults.innerHTML = '';
+        newsLoader.classList.remove('hidden');
+        const topic = document.getElementById('newsTopic').value;
+        const numResults = document.getElementById('newsNumResults').value;
+        if (!topic.trim()) {
+          newsLoader.classList.add('hidden');
+          return;
+        }
+        const res = await fetch(`/news/latest?topic=${encodeURIComponent(topic)}&num_results=${numResults}`);
+        const data = await res.json();
+        if (data.news && data.news.length > 0) {
+          newsResults.innerHTML = data.news.map(item =>
+            `<li><a href="${item.link}" target="_blank" class="text-blue-600 underline">${item.title}</a><br><span class="text-xs text-gray-500">${item.published || ''}</span></li>`
+          ).join('');
+        } else {
+          newsResults.innerHTML = '<li>No news found.</li>';
+        }
+        newsLoader.classList.add('hidden');
+      };
+    }
+    // Generate questions
+    const questionsForm = document.getElementById('questionsForm');
+    if (questionsForm) {
+      questionsForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const questionsLoader = document.getElementById('questionsLoader');
+        questionsLoader.classList.remove('hidden');
+        const text = document.getElementById('questionsInput').value;
+        const model = document.getElementById('questionsModel').value;
+        if (!text.trim()) {
+          questionsLoader.classList.add('hidden');
+          return;
+        }
+        const res = await fetch('/text/questions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, model })
+        });
+        const data = await res.json();
+        const iframe = document.getElementById('questionsResult');
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(data.questions || 'No questions generated.');
+        doc.close();
+        questionsLoader.classList.add('hidden');
+      };
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+      // Helper to get timestamp
+      function getTimestamp() {
+        const now = new Date();
+        return now.toISOString().replace(/[-:T.]/g, '').slice(0, 15);
+      }
+      // Audio recording
+      let mediaRecorder;
+      let audioChunks = [];
+      const recordBtn = document.getElementById('record');
+      const stopBtn = document.getElementById('stop');
+      if (recordBtn) {
+        recordBtn.onclick = async () => {
+          audioChunks = [];
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          mediaRecorder.start();
+          mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+          recordBtn.disabled = true;
+          stopBtn.disabled = false;
+        };
+      }
+      if (stopBtn) {
+        stopBtn.onclick = () => {
+          mediaRecorder.stop();
+          mediaRecorder.onstop = async () => {
+            const audioUploadLoader = document.getElementById('audioUploadLoader');
+            audioUploadLoader.classList.remove('hidden');
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const formData = new FormData();
+            const filename = `recording_${getTimestamp()}.webm`;
+            formData.append('file', audioBlob, filename);
+            const res = await fetch('/audio/record', { method: 'POST', body: formData });
+            const data = await res.json();
+            document.getElementById('audioUploadResult').textContent = data.message || 'Upload complete.';
+            audioUploadLoader.classList.add('hidden');
+          };
+          recordBtn.disabled = false;
+          stopBtn.disabled = true;
+        };
+      }
+
+      // Transcribe audio
+      const transcribeForm = document.getElementById('transcribeForm');
+      if (transcribeForm) {
+        transcribeForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const transcribeLoader = document.getElementById('transcribeLoader');
+          transcribeLoader.classList.remove('hidden');
+          const fileInput = document.getElementById('transcribeFile');
+          if (!fileInput.files.length) {
+            document.getElementById('transcribeResult').textContent = 'Please select an audio file.';
+            transcribeLoader.classList.add('hidden');
+            return;
+          }
+          const formData = new FormData();
+          formData.append('file', fileInput.files[0]);
+          try {
+            const res = await fetch('/audio/transcribe', { method: 'POST', body: formData });
+            const data = await res.json();
+            document.getElementById('transcribeResult').textContent = data.content || 'No transcription.';
+          } catch (err) {
+            document.getElementById('transcribeResult').textContent = 'Error transcribing audio.';
+          }
+          transcribeLoader.classList.add('hidden');
+        };
+      }
+
+      // Summarize text
+      const summarizeForm = document.getElementById('summarizeForm');
+      if (summarizeForm) {
+        summarizeForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const summarizeLoader = document.getElementById('summarizeLoader');
+          summarizeLoader.classList.remove('hidden');
+          const text = document.getElementById('summaryInput').value;
+          const model = document.getElementById('llmModel').value;
+          if (!text.trim()) {
+            summarizeLoader.classList.add('hidden');
+            return;
+          }
+          const res = await fetch('/text/summarize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, model })
+          });
+          const data = await res.json();
+          const iframe = document.getElementById('summaryResult');
+          const doc = iframe.contentDocument || iframe.contentWindow.document;
+          doc.open();
+          doc.write(data.summary || 'No summary.');
+          doc.close();
+
+          // Also update modal iframe if open
+          const modalFrame = document.getElementById('summaryModalFrame');
+          if (modalFrame) {
+            const modalDoc = modalFrame.contentDocument || modalFrame.contentWindow.document;
+            modalDoc.open();
+            modalDoc.write(data.summary || 'No summary.');
+            modalDoc.close();
+          }
+          summarizeLoader.classList.add('hidden');
+        };
+      }
+
+      // Fullscreen modal logic
+      const summaryIframe = document.getElementById('summaryResult');
+      const summaryModal = document.getElementById('summaryModal');
+      const summaryModalFrame = document.getElementById('summaryModalFrame');
+      const closeModalBtn = document.getElementById('closeModal');
+      const fullscreenSummaryBtn = document.getElementById('fullscreenSummaryBtn');
+
+      if (fullscreenSummaryBtn && summaryIframe && summaryModal && summaryModalFrame) {
+        fullscreenSummaryBtn.addEventListener('click', () => {
+          // Copy content from main iframe to modal iframe
+          const doc = summaryIframe.contentDocument || summaryIframe.contentWindow.document;
+          const modalDoc = summaryModalFrame.contentDocument || summaryModalFrame.contentWindow.document;
+          modalDoc.open();
+          modalDoc.write(doc.documentElement.innerHTML);
+          modalDoc.close();
+          summaryModal.classList.remove('hidden');
+        });
+      }
+
+      if (closeModalBtn && summaryModal) {
+        closeModalBtn.addEventListener('click', () => {
+          summaryModal.classList.add('hidden');
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

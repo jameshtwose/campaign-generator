@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+requests
+torch
+torchvision
+torchaudio
+whisper-mps
+# faster-whisper
+python-multipart
+google-news-feed

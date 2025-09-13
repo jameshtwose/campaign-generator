@@ -1,0 +1,33 @@
+[project]
+name = "campaign-generator"
+version = "0.1.0"
+description = "A FastAPI service for campaign generation, competitor research, and audio content."
+authors = [
+    { name = "James Twose", email = "contact@jamestwose.com" }
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "requests",
+    "torch",
+    "torchvision",
+    "torchaudio",
+    "whisper-mps; platform_system=='Darwin'",
+    "faster-whisper; platform_system!='Darwin'",
+    "python-multipart",
+    "google-news-feed"
+]
+
+[project.scripts]
+campaign-generator = "main:run_api"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["main", "api", "utils", "schemas"]
+packages = ["routers", "templates"]
+include-package-data = true
