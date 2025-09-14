@@ -14,6 +14,32 @@
     <h1 class="text-3xl font-bold text-center mb-6">Campaign Generator</h1>
 
     <div class="bg-white rounded-lg shadow p-6 mb-8">
+      <h2 class="text-xl font-semibold mb-2">All ClickUp Tasks</h2>
+      <div id="clickupTasksLoader" class="flex items-center gap-2 text-purple-500">
+        <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        Fetching tasks...
+      </div>
+      <table id="clickupTasksTable" class="min-w-full border rounded text-sm mt-4 hidden">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="px-2 py-1 border">Name</th>
+            <th class="px-2 py-1 border">Text Content</th>
+            <th class="px-2 py-1 border">Tags</th>
+            <th class="px-2 py-1 border">Status</th>
+            <th class="px-2 py-1 border">Assignee</th>
+            <th class="px-2 py-1 border">Last Updated</th>
+            <th class="px-2 py-1 border">Link</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div id="clickupTasksError" class="text-red-500 mt-2"></div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
       <h2 class="text-xl font-semibold mb-2">Latest News</h2>
       <form id="newsForm" class="mb-2">
         <input id="newsTopic" type="text" class="w-full border rounded p-2 mb-2"
@@ -39,8 +65,8 @@
         <textarea id="questionsInput" rows="4" class="w-full border rounded p-2 mb-2"
           placeholder="Paste text to generate questions..."></textarea>
         <select id="questionsModel" class="w-full border rounded p-2 mb-2">
-          <option value="gemma3:1b">Gemma 3 1B</option>
           <option value="gpt-oss:20b">GPT-OSS 20B</option>
+          <option value="gemma3:1b">Gemma 3 1B</option>
         </select>
         <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Generate
           Questions</button>
@@ -93,8 +119,8 @@
         <textarea id="summaryInput" rows="4" class="w-full border rounded p-2 mb-2"
           placeholder="Paste text to summarize..."></textarea>
         <select id="llmModel" class="w-full border rounded p-2 mb-2">
-          <option value="gemma3:1b">Gemma 3 1B</option>
           <option value="gpt-oss:20b">GPT-OSS 20B</option>
+          <option value="gemma3:1b">Gemma 3 1B</option>
         </select>
         <button type="submit" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Summarize</button>
       </form>
@@ -142,6 +168,21 @@
           newsResults.innerHTML = data.news.map(item =>
             `<li><a href="${item.link}" target="_blank" class="text-blue-600 underline">${item.title}</a><br><span class="text-xs text-gray-500">${item.published || ''}</span></li>`
           ).join('');
+          // Auto-populate Generate Questions text field with /text/scrape output for first news URL
+          const firstNewsUrl = data.news[0].link;
+          if (firstNewsUrl) {
+            const scrapeRes = await fetch(`/text/scrape?url=${encodeURIComponent(firstNewsUrl)}`);
+            const scrapeData = await scrapeRes.json();
+            const questionsInput = document.getElementById('questionsInput');
+            if (questionsInput && scrapeData.content) {
+              questionsInput.value = scrapeData.content;
+              // Auto-run the generate questions POST
+              const questionsForm = document.getElementById('questionsForm');
+              if (questionsForm) {
+                questionsForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+              }
+            }
+          }
         } else {
           newsResults.innerHTML = '<li>No news found.</li>';
         }
@@ -304,6 +345,100 @@
           summaryModal.classList.add('hidden');
         });
       }
+
+      // ClickUp tasks fetch
+      const clickupTasksForm = document.getElementById('clickupTasksForm');
+      if (clickupTasksForm) {
+        clickupTasksForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const loader = document.getElementById('clickupTasksLoader');
+          const table = document.getElementById('clickupTasksTable');
+          const errorDiv = document.getElementById('clickupTasksError');
+          const listId = document.getElementById('clickupListId').value.trim();
+          const token = document.getElementById('clickupToken').value.trim();
+          table.classList.add('hidden');
+          errorDiv.textContent = '';
+          loader.classList.remove('hidden');
+          if (!listId || !token) {
+            loader.classList.add('hidden');
+            errorDiv.textContent = 'Please enter both List ID and API Token.';
+            return;
+          }
+          try {
+            const res = await fetch(`/clickup/latest-tasks/${listId}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.latest_tasks && data.latest_tasks.length > 0) {
+              const tbody = table.querySelector('tbody');
+              tbody.innerHTML = data.latest_tasks.map(task => `
+                <tr>
+                  <td class="border px-2 py-1">${task.name}</td>
+                  <td class="border px-2 py-1">${task.text_content || ''}</td>
+                  <td class="border px-2 py-1">${task.tags && task.tags.length > 0 ? task.tags.map(tag => `<span class='inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-1'>${tag.name}</span>`).join('') : ''}</td>
+                  <td class="border px-2 py-1">${task.status?.status || ''}</td>
+                  <td class="border px-2 py-1">${task.assignees && task.assignees.length > 0 ? task.assignees.map(a => a.username || a.email).join(', ') : ''}</td>
+                  <td class="border px-2 py-1">${task.date_updated ? new Date(Number(task.date_updated)).toLocaleString() : ''}</td>
+                </tr>
+              `).join('');
+              table.classList.remove('hidden');
+            } else {
+              errorDiv.textContent = 'No tasks found.';
+            }
+          } catch (err) {
+            errorDiv.textContent = 'Error fetching tasks.';
+          }
+          loader.classList.add('hidden');
+        };
+      }
+    });
+
+    // Fetch all ClickUp tasks on page load
+    document.addEventListener('DOMContentLoaded', async function () {
+      const loader = document.getElementById('clickupTasksLoader');
+      const table = document.getElementById('clickupTasksTable');
+      const errorDiv = document.getElementById('clickupTasksError');
+      let researchTextContent = '';
+      try {
+        const res = await fetch('/clickup/tasks');
+        const data = await res.json();
+        if (data.tasks && data.tasks.length > 0) {
+          // Find most recently updated task with a 'research' tag
+          const researchTasks = data.tasks.filter(task =>
+            task.tags && task.tags.some(tag => tag.name.toLowerCase() === 'research')
+          );
+          if (researchTasks.length > 0) {
+            researchTasks.sort((a, b) => Number(b.date_updated || 0) - Number(a.date_updated || 0));
+            researchTextContent = researchTasks[0].text_content || '';
+            // Autopopulate the news text box
+            const newsTopicInput = document.getElementById('newsTopic');
+            if (newsTopicInput) newsTopicInput.value = researchTextContent;
+            // Auto-run the news fetch if autofilled
+            const newsForm = document.getElementById('newsForm');
+            if (newsForm && researchTextContent) {
+              newsForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+            }
+          }
+          const tbody = table.querySelector('tbody');
+          tbody.innerHTML = data.tasks.map(task => `
+            <tr>
+              <td class="border px-2 py-1">${task.name}</td>
+              <td class="border px-2 py-1">${task.text_content || ''}</td>
+              <td class="border px-2 py-1">${task.tags && task.tags.length > 0 ? task.tags.map(tag => `<span class='inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-1'>${tag.name}</span>`).join('') : ''}</td>
+              <td class="border px-2 py-1">${task.status?.status || ''}</td>
+              <td class="border px-2 py-1">${task.assignees && task.assignees.length > 0 ? task.assignees.map(a => a.username || a.email).join(', ') : ''}</td>
+              <td class="border px-2 py-1">${task.date_updated ? new Date(Number(task.date_updated)).toLocaleString() : ''}</td>
+              <td class="border px-2 py-1"><a href="${task.url}" target="_blank" class="text-blue-600 underline">Open</a></td>
+            </tr>
+          `).join('');
+          table.classList.remove('hidden');
+        } else {
+          errorDiv.textContent = 'No tasks found.';
+        }
+      } catch (err) {
+        errorDiv.textContent = 'Error fetching tasks.';
+      }
+      loader.classList.add('hidden');
     });
   </script>
 </body>

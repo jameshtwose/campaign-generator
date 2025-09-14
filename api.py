@@ -2,7 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # local imports
-from routers import audio_router, news_router, text_router, frontend_router
+from routers import (
+    audio_router,
+    news_router,
+    text_router,
+    frontend_router,
+    clickup_router,
+)
 
 app = FastAPI(
     title="campaign-generator-api",
@@ -25,9 +31,12 @@ app.add_middleware(
 )
 
 app.include_router(audio_router.router)
+app.include_router(clickup_router.router)
 app.include_router(frontend_router.router)
 app.include_router(news_router.router)
 app.include_router(text_router.router)
+app.include_router(clickup_router.router)
+
 
 @app.get("/")
 async def root():
