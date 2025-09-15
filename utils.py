@@ -28,10 +28,11 @@ else:
         # Concatenate all segments
         return " ".join([segment.text for segment in segments])
 
+
 fit_md_generator = DefaultMarkdownGenerator(
-    content_source="fit_html",
-    options={"ignore_links": True}
+    content_source="fit_html", options={"ignore_links": True}
 )
+
 
 def get_ollama_host():
     if platform.system() == "Darwin":
@@ -50,14 +51,19 @@ def get_ollama_questions(text: str, model: str = "gemma3:1b"):
         "messages": [
             {
                 "role": "system",
-                "content": "You are a helpful assistant that generates questions based on text.",
-            },
-            {
-                "role": "system",
-                "content": f"""The content you will be provided with comes from a dungeons and dragons article. 
-                I want you to write a list of interview style questions using the information from the article as general inspiration. 
-                Do not repeat any specific names or places from the article. 
-                Make the questions generic enough to not be tied to the article.""",
+                "content": f"""
+                You are an interviewer tasked with creating thoughtful, reusable interview questions on the topic of Dungeons and dragons. 
+                Your questions must follow these five parameters:
+                1. Breadth - Cover the six journalist anchors (Who, What, When, Where, Why, How).
+                2. Creator-Centric - Include process, behind-the-scenes, origin/inspiration, and insights/lessons learned.
+                3. Relevance - Keep every question tied to the overarching topic, so answers are useful across multiple content formats (blog, posts, newsletter, Patreon, VIP).
+                4. Tangibility - Each question should have a mirrored version that asks, "So what? What's in it for the reader, client, fan, or peer?"
+                5. Business Transferability - Include at least one variant of each question that shifts the focus from "Here's my journey" to "Here's a lesson others could apply in their own business or creative practice."
+                Output your questions organised by category (Who, What, When, Where, Why, How). For each question, include:
+                •  The creator-centric version
+                •  The tangible/client-centric version
+                •  The business transferability version.
+                """,
             },
             {
                 "role": "system",
@@ -223,7 +229,9 @@ async def scrape_website_content(url: str) -> str:
             content = result.markdown
             print(f"Scraped content: {content[:500]}...")  # Print first 500 chars
             # return content
-            summarized_content = internal_get_ollama_summary(text=content, model="granite3.1-moe:1b")
+            summarized_content = internal_get_ollama_summary(
+                text=content, model="granite3.1-moe:1b"
+            )
             return summarized_content
     except Exception as e:
         print(f"Error fetching {url}: {e}")
