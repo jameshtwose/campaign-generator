@@ -1,7 +1,7 @@
 
 [project]
 name = "campaign-generator"
-version = "0.1.2"
+version = "0.1.4"
 description = "A FastAPI service for campaign generation, competitor research, and audio content."
 authors = [
     { name = "James Twose", email = "contact@jamestwose.com" }
@@ -21,7 +21,8 @@ dependencies = [
     "crawl4ai",
     "playwright",
     "playwright_stealth",
-    "lightrag-hku"
+    "lightrag-hku",
+    "feedparser"
 ]
 
 [project.scripts]
@@ -32,6 +33,6 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-py-modules = ["main", "api", "utils", "schemas"]
+py-modules = ["main", "api", "utils", "schemas", "clickup_utils", "rag_utils", "settings"]
 packages = ["routers", "templates"]
 include-package-data = true
