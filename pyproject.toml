@@ -1,6 +1,7 @@
+
 [project]
 name = "campaign-generator"
-version = "0.1.1"
+version = "0.1.2"
 description = "A FastAPI service for campaign generation, competitor research, and audio content."
 authors = [
     { name = "James Twose", email = "contact@jamestwose.com" }
@@ -14,10 +15,13 @@ dependencies = [
     "torch",
     "torchvision",
     "torchaudio",
-    "whisper-mps; platform_system=='Darwin'",
-    "faster-whisper; platform_system!='Darwin'",
+    "whisper-mps",
     "python-multipart",
-    "google-news-feed"
+    "pydantic-settings",
+    "crawl4ai",
+    "playwright",
+    "playwright_stealth",
+    "lightrag-hku"
 ]
 
 [project.scripts]
