@@ -36,6 +36,24 @@ pipx install campaign-generator
 
 ## Usage
 
+Set your ClickUp API key and team ID in your environment variables:
+
+```sh
+export CLICKUP_API_KEY=your_clickup_api_key
+export CLICKUP_TEAM_ID=your_clickup_team_id
+
+env | grep CLICKUP # to verify they are set
+```
+
+When you start the app for the first time, the following folders will be created in the directory you run the command from:
+- `research output/`: Stores research results generated from RSS feeds.
+- `question output/`: Stores generated questions.
+- `audio output/`: Stores uploaded audio files.
+- `transcripts output/`: Stores transcriptions of audio files.
+- `content generation/`: Stores generated content.
+
+Because of this behavior, it's recommended to run the app from a dedicated project directory.
+
 Start the app with:
 
 ```sh
@@ -48,6 +66,9 @@ Open your browser and navigate to `/frontend` to use the web interface:
 
 ```
 http://localhost:8080/frontend
+http://localhost:8080/frontend/chat # for RAG chat interface
+http://localhost:8080/docs # for API docs
+http://localhost:8080/graph-viewer # for visualization of the RAG graph
 ```
 
 ## How It Works
