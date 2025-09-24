@@ -46,6 +46,7 @@ async def _cron_job_once():
                 upload_file_from_bytes(
                     filename=chosen_filename,
                     data=content_to_upload.encode("utf-8"),
+                    output_dir=LocalSettings().research_output_dir,
                 )
             except Exception as e:
                 print(f"[cron_job_once] error: {e}")

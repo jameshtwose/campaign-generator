@@ -61,14 +61,11 @@ async def question_rag_endpoint(request: TextRequest):
             param=QueryParam(mode="hybrid", top_k=5),
             system_prompt=system_prompt,
         )
-        if LocalSettings().question_output_dir and not os.path.exists(
-            LocalSettings().question_output_dir
-        ):
-            os.makedirs(LocalSettings().question_output_dir)
-        filename = f"{LocalSettings().question_output_dir}/{request.task_id or 'unknown_task'}.txt"
+        filename = f"{request.task_id or 'unknown_task'}.txt"
         upload_file_from_bytes(
             filename=filename,
             data=response.encode("utf-8"),
+            output_dir=LocalSettings().question_output_dir,
         )
         if request.task_id:
             update_clickup_task(

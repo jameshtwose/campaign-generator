@@ -272,7 +272,7 @@ async def scrape_website_content(url: str) -> str:
         print(f"Error fetching {url}: {e}")
 
 
-def upload_file_from_bytes(filename: str, data: bytes) -> str:
+def upload_file_from_bytes(filename: str, data: bytes, output_dir: str) -> str:
     """Write bytes to a local file under LocalSettings.research_output_dir.
 
     Args:
@@ -284,15 +284,10 @@ def upload_file_from_bytes(filename: str, data: bytes) -> str:
     Returns:
         The path to the written file.
     """
-    settings = LocalSettings()
-    out_dir = settings.research_output_dir or "research output"
-    # ensure directory exists
-    os.makedirs(out_dir, exist_ok=True)
-
     # sanitize filename a bit
     safe_name = filename.replace("/", "_").replace("\\", "_")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    out_path = os.path.join(out_dir, f"{timestamp}_{safe_name}")
+    out_path = os.path.join(output_dir, f"{timestamp}_{safe_name}")
 
     with open(out_path, "wb") as fh:
         fh.write(data)

@@ -28,7 +28,7 @@ async def get_models():
 @router.post("/summarize")
 async def summarize_text(request: TextRequest):
     try:
-        summary = get_ollama_summary(text=request.text, model=request.model)
+        summary = get_ollama_summary(text=request.text, model=request.chat_model)
         return {"summary": summary}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -38,7 +38,7 @@ async def summarize_text(request: TextRequest):
 # async def generate_questions(request: TextRequest):
 #     try:
 #         updated_file_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{request.file_name or 'uploaded_file'}.md"
-#         questions = get_ollama_questions(text=request.text, model=request.model)
+#         questions = get_ollama_questions(text=request.text, model=request.chat_model)
 #         upload_file_from_bytes(
 #             filename=updated_file_name,
 #             data=questions.encode("utf-8"),
@@ -57,9 +57,9 @@ async def cleanup_transcript(request: TextRequest):
         system_prompt = ""
         print(f"Warning: Failed to fetch system prompt from ClickUp task: {e}")
     try:
-        print(f"Chosen model: {request.model}")
+        print(f"Chosen model: {request.chat_model}")
         cleaned_text = get_ollama_transcript_cleanup(
-            text=request.text, model=request.model, system_prompt=system_prompt
+            text=request.text, model=request.chat_model, system_prompt=system_prompt
         )
         if request.task_id:
             try:
@@ -72,10 +72,11 @@ async def cleanup_transcript(request: TextRequest):
                 print(f"Warning: Failed to update ClickUp task {request.task_id}: {e}")
 
             try:
-                file_name = f"{LocalSettings().transcripts_output_dir}/{request.task_id or 'unknown_task'}.txt"
+                file_name = f"cleaned_{request.task_id or 'unknown_task'}.txt"
                 upload_file_from_bytes(
                     filename=file_name,
                     data=cleaned_text.encode("utf-8"),
+                    output_dir=LocalSettings().transcripts_output_dir,
                 )
             except Exception as e:
                 print(
@@ -96,8 +97,9 @@ async def generate_content(request: TextRequest):
         print(f"Warning: Failed to fetch system prompt from ClickUp task: {e}")
 
     try:
+        print(f"Chosen model: {request.chat_model}")
         content = get_ollama_content_generation(
-            prompt=request.text, model=request.model, system_prompt=system_prompt
+            prompt=request.text, model=request.chat_model, system_prompt=system_prompt
         )
 
         if request.task_id:
@@ -111,10 +113,11 @@ async def generate_content(request: TextRequest):
                 print(f"Warning: Failed to update ClickUp task {request.task_id}: {e}")
 
             try:
-                file_name = f"{LocalSettings().content_generation_dir}/{request.task_id or 'unknown_task'}.txt"
+                file_name = f"{request.task_id or 'unknown_task'}.txt"
                 upload_file_from_bytes(
                     filename=file_name,
                     data=content.encode("utf-8"),
+                    output_dir=LocalSettings().content_generation_dir,
                 )
             except Exception as e:
                 print(

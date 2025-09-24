@@ -164,7 +164,7 @@
                         fetch('/text/transcript-cleanup', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ task_id: taskId, text: description, model: document.getElementById('llmModelSelect')?.value || '' })
+                            body: JSON.stringify({ task_id: taskId, text: description, chat_model: document.getElementById('llmModelSelect')?.value || '' })
                         }).then(async res => {
                             const result = await res.json();
                             if (res.ok && result.cleaned_text) {
@@ -188,7 +188,7 @@
                         fetch('/text/generate-content', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ task_id: taskId, text: description, model: document.getElementById('llmModelSelect')?.value || '' })
+                            body: JSON.stringify({ task_id: taskId, text: description, chat_model: document.getElementById('llmModelSelect')?.value || '' })
                         }).then(async res => {
                             const result = await res.json();
                             if (res.ok) {
