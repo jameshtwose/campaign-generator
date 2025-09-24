@@ -11,8 +11,8 @@ class ClickUpSettings(BaseSettings):
 
 
 class LocalSettings(BaseSettings):
-    research_output_dir: str = f"{os.path.expanduser('~')}/Google Drive/My Drive/QuestNest Backoffice/research output"
-    question_output_dir: str = f"{os.path.expanduser('~')}/Google Drive/My Drive/QuestNest Backoffice/question output"
-    audio_output_dir: str = f"{os.path.expanduser('~')}/Google Drive/My Drive/QuestNest Backoffice/audio output"
-    transcripts_output_dir: str = f"{os.path.expanduser('~')}/Google Drive/My Drive/QuestNest Backoffice/transcripts output"
-    content_generation_dir: str = f"{os.path.expanduser('~')}/Google Drive/My Drive/QuestNest Backoffice/content generation"
+    research_output_dir: str = "research output"
+    question_output_dir: str = "question output"
+    audio_output_dir: str = "audio output"
+    transcripts_output_dir: str = "transcripts output"
+    content_generation_dir: str = "content generation"

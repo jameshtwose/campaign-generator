@@ -1,7 +1,7 @@
 
 [project]
 name = "campaign-generator"
-version = "0.1.4"
+version = "0.1.5"
 description = "A FastAPI service for campaign generation, competitor research, and audio content."
 authors = [
     { name = "James Twose", email = "contact@jamestwose.com" }
