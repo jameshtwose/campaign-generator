@@ -1,12 +1,14 @@
+import os
 from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CacheMode, CrawlerRunConfig
-from google_news_feed import GoogleNewsFeed
 import subprocess
 import requests
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import platform
 import asyncio
 from playwright.async_api import async_playwright
+
+from settings import ClickUpSettings, LocalSettings
 
 if platform.system() == "Darwin":
     # macOS: use whisper-mps
@@ -42,6 +44,12 @@ def get_ollama_host():
         print("Using Docker container for Ollama API")
         return "http://ollama:11434"
 
+def get_ollama_models():
+    """Fetch available models from Ollama API."""
+    url = f"{get_ollama_host()}/api/tags"
+    response = requests.get(url)
+    response.raise_for_status()
+    return response.json().get("models", [])
 
 def get_ollama_questions(text: str, model: str = "gemma3:1b"):
     """Generate a list of questions based on the prompt text using Ollama API."""
@@ -67,12 +75,11 @@ def get_ollama_questions(text: str, model: str = "gemma3:1b"):
             },
             {
                 "role": "system",
-                "content": "Return a list of questions in formatted HTML.",
+                "content": "Return a list of questions in formatted markdown.",
             },
-            {"role": "system", "content": "Use <ul> and <li> tags for the questions."},
             {
                 "role": "system",
-                "content": "Only respond with the HTML content, no explanations.",
+                "content": "Only respond with the markdown content, no explanations.",
             },
             {"role": "user", "content": text},
         ],
@@ -155,25 +162,53 @@ def internal_get_ollama_summary(text: str, model: str = "gemma3:1b"):
     return generated_text
 
 
+def get_ollama_transcript_cleanup(text: str, model: str = "gemma3:1b", system_prompt: str = ""):
+    """Clean up a transcript using Ollama API."""
+    url = f"{get_ollama_host()}/v1/chat/completions"
+    payload = {
+        "model": model,
+        "messages": [
+            {
+                "role": "system",
+                "content": system_prompt or "You are a helpful assistant that cleans up transcripts.",
+            },
+            {"role": "user", "content": text},
+        ],
+    }
+    response = requests.post(url, json=payload)
+    response.raise_for_status()
+    generated_text = response.json()["choices"][0]["message"]["content"]
+
+    return generated_text
+
+
+def get_ollama_content_generation(prompt: str, model: str = "gemma3:1b", system_prompt: str = "") -> str:
+    """Generate content based on a prompt using Ollama API."""
+    url = f"{get_ollama_host()}/v1/chat/completions"
+    payload = {
+        "model": model,
+        "messages": [
+            {
+                "role": "system",
+                "content": system_prompt or "You are a helpful assistant that generates content.",
+            },
+            {"role": "user", "content": prompt},
+        ],
+    }
+    response = requests.post(url, json=payload)
+    response.raise_for_status()
+    generated_text = response.json()["choices"][0]["message"]["content"]
+
+    # Remove markdown code block markers if present
+    if generated_text.startswith("```markdown"):
+        generated_text = generated_text[len("```markdown") :].strip()
+    if generated_text.endswith("```"):
+        generated_text = generated_text[:-3].strip()
+    return generated_text
+
+
 def convert_webm_to_mp3(webm_path, mp3_path):
     subprocess.run(["ffmpeg", "-y", "-i", webm_path, mp3_path], check=True)
-
-
-def get_latest_news(topic: str, num_results: int = 5):
-    """Fetch the latest news updates on a topic using google-news-feed."""
-    feed = GoogleNewsFeed(resolve_internal_links=True)
-    results = feed.query(
-        query=topic, before=date.today(), after=date.today() - timedelta(days=7)
-    )
-    news_list = [
-        {
-            "title": getattr(item, "title", None),
-            "link": getattr(item, "link", None),
-            "published": getattr(item, "published", None),
-        }
-        for item in results[:num_results]
-    ]
-    return news_list
 
 
 async def get_real_article_url_with_consent(google_news_url):
@@ -232,6 +267,34 @@ async def scrape_website_content(url: str) -> str:
             summarized_content = internal_get_ollama_summary(
                 text=content, model="granite3.1-moe:1b"
             )
-            return summarized_content
+            return summarized_content, final_url
     except Exception as e:
         print(f"Error fetching {url}: {e}")
+
+
+def upload_file_from_bytes(filename: str, data: bytes) -> str:
+    """Write bytes to a local file under LocalSettings.research_output_dir.
+
+    Args:
+        filename: Name of the file to write.
+        data: Bytes content to write.
+        mime_type: Optional MIME type (ignored).
+        folder_id: Optional folder id (ignored).
+
+    Returns:
+        The path to the written file.
+    """
+    settings = LocalSettings()
+    out_dir = settings.research_output_dir or "research output"
+    # ensure directory exists
+    os.makedirs(out_dir, exist_ok=True)
+
+    # sanitize filename a bit
+    safe_name = filename.replace("/", "_").replace("\\", "_")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    out_path = os.path.join(out_dir, f"{timestamp}_{safe_name}")
+
+    with open(out_path, "wb") as fh:
+        fh.write(data)
+
+    return out_path

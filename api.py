@@ -1,14 +1,33 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # local imports
 from routers import (
     audio_router,
-    news_router,
+    cron_router,
     text_router,
     frontend_router,
     clickup_router,
+    rag_router,
 )
+from settings import LocalSettings
+
+async def lifespan(app: FastAPI):
+    # on startup check if output directories exist, if not create them
+    output_dirs = [
+        LocalSettings().research_output_dir,
+        LocalSettings().question_output_dir,
+        LocalSettings().audio_output_dir,
+        LocalSettings().transcripts_output_dir,
+        LocalSettings().content_generation_dir,
+    ]
+
+    for dir in output_dirs:
+        os.makedirs(os.path.expanduser(dir), exist_ok=True)
+
+    yield
+    # Shutdown code can go here if needed
 
 app = FastAPI(
     title="campaign-generator-api",
@@ -17,7 +36,7 @@ app = FastAPI(
     contact={
         "email": "contact@jamestwose.com",
     },
-    # lifespan=lifespan,
+    lifespan=lifespan,
 )
 
 origins = ["*"]
@@ -32,10 +51,10 @@ app.add_middleware(
 
 app.include_router(audio_router.router)
 app.include_router(clickup_router.router)
+app.include_router(cron_router.router)
 app.include_router(frontend_router.router)
-app.include_router(news_router.router)
+app.include_router(rag_router.router)
 app.include_router(text_router.router)
-app.include_router(clickup_router.router)
 
 
 @app.get("/")

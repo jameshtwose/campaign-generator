@@ -208,3 +208,6 @@ __marimo__/
 
 scratch*
 .env*
+*googleusercontent*
+credentials.json
+token.json
