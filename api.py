@@ -21,6 +21,8 @@ async def lifespan(app: FastAPI):
         LocalSettings().audio_output_dir,
         LocalSettings().transcripts_output_dir,
         LocalSettings().content_generation_dir,
+        LocalSettings().challenge_output_dir,
+        LocalSettings().review_output_dir,
     ]
 
     for dir in output_dirs:

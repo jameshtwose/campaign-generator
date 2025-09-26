@@ -177,11 +177,36 @@
                         });
                     }
                 }
-                // For any task with status 'phase 6. transcript clean', call generate-content
+                // For any task with status 'phase 6. transcript clean', call challenge-ideas
                 const transcriptCleanTasks = data.tasks.filter(task =>
                     task.status && String(task.status.status || '').toLowerCase() === 'phase 6. transcript clean'
                 );
                 for (const task of transcriptCleanTasks) {
+                    const taskId = task.id || task.task_id || '';
+                    const description = task.text_content || task.description || '';
+                    if (taskId && description) {
+                        fetch('/text/challenge-ideas', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ task_id: taskId, text: description, chat_model: document.getElementById('llmModelSelect')?.value || '' })
+                        }).then(async res => {
+                            const result = await res.json();
+                            if (res.ok) {
+                                console.log('Challenge generated for task', taskId, result);
+                            } else {
+                                console.warn('Challenge generation error for task', taskId, result);
+                            }
+                        }).catch(err => {
+                            console.error('Challenge generation fetch error for task', taskId, err);
+                        });
+                    }
+                }
+
+                // For any task with status 'phase 7. challenge', call generate-content
+                const challengeTasks = data.tasks.filter(task =>
+                    task.status && String(task.status.status || '').toLowerCase() === 'phase 7. challenge'
+                );
+                for (const task of challengeTasks) {
                     const taskId = task.id || task.task_id || '';
                     const description = task.text_content || task.description || '';
                     if (taskId && description) {
@@ -198,6 +223,31 @@
                             }
                         }).catch(err => {
                             console.error('Content generation fetch error for task', taskId, err);
+                        });
+                    }
+                }
+
+                // For any task with status 'phase 8. draft channel', call review
+                const reviewTasks = data.tasks.filter(task =>
+                    task.status && String(task.status.status || '').toLowerCase() === 'phase 8. draft channel'
+                );
+                for (const task of reviewTasks) {
+                    const taskId = task.id || task.task_id || '';
+                    const description = task.text_content || task.description || '';
+                    if (taskId && description) {
+                        fetch('/text/review', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ task_id: taskId, text: description, chat_model: document.getElementById('llmModelSelect')?.value || '' })
+                        }).then(async res => {
+                            const result = await res.json();
+                            if (res.ok) {
+                                console.log('Review generated for task', taskId, result);
+                            } else {
+                                console.warn('Review generation error for task', taskId, result);
+                            }
+                        }).catch(err => {
+                            console.error('Review generation fetch error for task', taskId, err);
                         });
                     }
                 }

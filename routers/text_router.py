@@ -32,21 +32,7 @@ async def summarize_text(request: TextRequest):
         return {"summary": summary}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-# @router.post("/questions")
-# async def generate_questions(request: TextRequest):
-#     try:
-#         updated_file_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{request.file_name or 'uploaded_file'}.md"
-#         questions = get_ollama_questions(text=request.text, model=request.chat_model)
-#         upload_file_from_bytes(
-#             filename=updated_file_name,
-#             data=questions.encode("utf-8"),
-#         )
-#         return {"questions": questions}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
+    
 
 @router.post("/transcript-cleanup")
 async def cleanup_transcript(request: TextRequest):
@@ -85,10 +71,10 @@ async def cleanup_transcript(request: TextRequest):
         return {"cleaned_text": cleaned_text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
 
-
-@router.post("/generate-content")
-async def generate_content(request: TextRequest):
+@router.post("/challenge-ideas")
+async def generate_challenge_ideas(request: TextRequest):
     try:
         task = fetch_clickup_task(task_id="869akcv6d")
         system_prompt = task.get("text_content", "") if task else ""
@@ -113,6 +99,51 @@ async def generate_content(request: TextRequest):
                 print(f"Warning: Failed to update ClickUp task {request.task_id}: {e}")
 
             try:
+                file_name = f"challenge_ideas_{request.task_id or 'unknown_task'}.txt"
+                upload_file_from_bytes(
+                    filename=file_name,
+                    data=content.encode("utf-8"),
+                    output_dir=LocalSettings().content_generation_dir,
+                )
+            except Exception as e:
+                print(
+                    f"Warning: Failed to upload generated content for task {request.task_id}: {e}"
+                )
+
+        return {"content": content}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/generate-content")
+async def generate_content(request: TextRequest):
+    try:
+        prompt_task = fetch_clickup_task(task_id="869ak6tvx")
+        prompt = prompt_task.get("text_content", "") if prompt_task else ""
+        style_task = fetch_clickup_task(task_id="869akjejr")
+        style = style_task.get("text_content", "") if style_task else ""
+        system_prompt = f"{prompt}\n\nStyle Guidelines:\n{style}"
+    except Exception as e:
+        system_prompt = ""
+        print(f"Warning: Failed to fetch system prompt from ClickUp task: {e}")
+
+    try:
+        print(f"Chosen model: {request.chat_model}")
+        content = get_ollama_content_generation(
+            prompt=request.text, model=request.chat_model, system_prompt=system_prompt
+        )
+
+        if request.task_id:
+            try:
+                update_clickup_task(
+                    task_id=request.task_id,
+                    status="phase 8. draft channel",
+                    description=content,
+                )
+            except Exception as e:
+                print(f"Warning: Failed to update ClickUp task {request.task_id}: {e}")
+
+            try:
                 file_name = f"{request.task_id or 'unknown_task'}.txt"
                 upload_file_from_bytes(
                     filename=file_name,
@@ -129,15 +160,46 @@ async def generate_content(request: TextRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# @router.get("/scrape")
-# async def scrape_website(url: str):
-#     try:
-#         content, final_url = await scrape_website_content(url)
-#         content_to_upload = f"Source URL: {final_url}\n\n{content}"
-#         upload_file_from_bytes(
-#             filename=f"{final_url.split('//')[-1].replace('/', '_')}.txt",
-#             data=content_to_upload.encode("utf-8"),
-#         )
-#         return {"content": content}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
+@router.post("/review")
+async def review_content(request: TextRequest):
+    try:
+        prompt_task = fetch_clickup_task(task_id="869ak6h10")
+        prompt = prompt_task.get("text_content", "") if prompt_task else ""
+        style_task = fetch_clickup_task(task_id="869akjejr")
+        style = style_task.get("text_content", "") if style_task else ""
+        system_prompt = f"{prompt}\n\nStyle Guidelines:\n{style}"
+    except Exception as e:
+        system_prompt = ""
+        print(f"Warning: Failed to fetch system prompt from ClickUp task: {e}")
+
+    try:
+        print(f"Chosen model: {request.chat_model}")
+        content = get_ollama_content_generation(
+            prompt=request.text, model=request.chat_model, system_prompt=system_prompt
+        )
+
+        if request.task_id:
+            try:
+                update_clickup_task(
+                    task_id=request.task_id,
+                    status="phase 9. review interlink",
+                    description=content,
+                )
+            except Exception as e:
+                print(f"Warning: Failed to update ClickUp task {request.task_id}: {e}")
+
+            try:
+                file_name = f"{request.task_id or 'unknown_task'}.txt"
+                upload_file_from_bytes(
+                    filename=file_name,
+                    data=content.encode("utf-8"),
+                    output_dir=LocalSettings().review_output_dir,
+                )
+            except Exception as e:
+                print(
+                    f"Warning: Failed to upload generated content for task {request.task_id}: {e}"
+                )
+
+        return {"content": content}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
