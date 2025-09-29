@@ -50,7 +50,9 @@ When you start the app for the first time, the following folders will be created
 - `question output/`: Stores generated questions.
 - `audio output/`: Stores uploaded audio files.
 - `transcripts output/`: Stores transcriptions of audio files.
-- `content generation/`: Stores generated content.
+- `content generation output/`: Stores generated content.
+- `review output/`: Stores reviewed content.
+- `challenge output/`: Stores any challenges encountered.
 
 Because of this behavior, it's recommended to run the app from a dedicated project directory.
 
