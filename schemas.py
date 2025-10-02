@@ -12,9 +12,10 @@ class TextRequest(BaseModel):
 
 
 class RagRequest(BaseModel):
+    task_id: str | None = None
     chat_model: str = "gemma3:1b"
     embedding_model: str = "nomic-embed-text:latest"
-    question: str
+    text: str
     mode: str = "local"
     top_k: int = 5
     similarity_threshold: float = 0.0

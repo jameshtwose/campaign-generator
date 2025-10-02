@@ -293,3 +293,26 @@ def upload_file_from_bytes(filename: str, data: bytes, output_dir: str) -> str:
         fh.write(data)
 
     return out_path
+
+
+def flatten_dict_to_string(d, separator='\n---\n'):
+    """Recursively flattens a nested dictionary into a single string."""
+    parts = []
+    
+    # Handle dictionary
+    if isinstance(d, dict):
+        for key, value in d.items():
+            parts.append(str(key))
+            parts.append(flatten_dict_to_string(value, separator))
+    
+    # Handle list
+    elif isinstance(d, list):
+        for item in d:
+            parts.append(flatten_dict_to_string(item, separator))
+    
+    # Handle base value (string, int, etc.)
+    else:
+        return str(d)
+    
+    # Filter out empty strings that might result from empty lists/dicts or initial recursion calls
+    return separator.join(filter(None, parts))

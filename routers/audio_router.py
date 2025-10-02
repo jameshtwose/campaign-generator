@@ -3,7 +3,7 @@ import shutil
 import os
 
 # local imports
-from clickup_utils import add_attachment_to_task, update_clickup_task
+from clickup_utils import add_attachment_to_task, fetch_clickup_task, update_clickup_task
 from settings import LocalSettings
 from utils import convert_webm_to_mp3, transcribe_audio
 
@@ -44,10 +44,17 @@ async def transcribe(
     task_id = file.filename.split('_')[-1].split('.')[0] if '_' in file.filename else None
     if task_id:
         try:
+            current_task = fetch_clickup_task(task_id=task_id)
+            current_content = current_task.get("text_content", "") if current_task else ""
+        except Exception as e:
+            print(f"Warning: Failed to fetch ClickUp task {task_id}: {e}")
+
+        try:
+            updated_content = current_content + "\n\n" + content if current_content else content
             update_clickup_task(
                 task_id=task_id,
                 status="phase 5. transcript",
-                description=content
+                description=updated_content
             )
         except Exception as e:
             print(f"Warning: Failed to update ClickUp task {task_id}: {e}")

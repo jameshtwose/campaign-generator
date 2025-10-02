@@ -21,8 +21,14 @@
         </div>
         <div class="flex justify-end mb-4 items-center gap-2">
             <label for="llmModelSelect" class="mr-2 text-sm font-medium text-gray-700">LLM Model:</label>
-            <select id="llmModelSelect" class="border rounded px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500">
+            <select id="llmModelSelect" class="border rounded px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500 min-w-[120px]">
                 <option value="">Loading...</option>
+            </select>
+            <label for="embeddingModelSelect" class="ml-2 mr-1 text-sm font-medium text-gray-700">Embedding:</label>
+            <select id="embeddingModelSelect" class="border rounded px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500 min-w-[120px]">
+                <option value="nomic-embed-text:latest">nomic-embed-text:latest</option>
+                <option value="bge-base-en-v1.5">bge-base-en-v1.5</option>
+                <option value="text-embedding-ada-002">text-embedding-ada-002</option>
             </select>
             <button id="cronControlBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Cron
                 Control</button>
@@ -101,11 +107,12 @@
         async function queryInterviewPrepQuestions(taskId, description) {
             try {
                 if (interviewPrepIndicator) interviewPrepIndicator.classList.remove('hidden');
-                const model = document.getElementById('llmModelSelect')?.value || '';
+                const chat_model = document.getElementById('llmModelSelect')?.value || '';
+                const embedding_model = document.getElementById('embeddingModelSelect')?.value || '';
                 const res = await fetch('/rag/questions', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ task_id: taskId, text: description, model })
+                    body: JSON.stringify({ task_id: taskId, text: description, chat_model, embedding_model })
                 });
                 if (!res.ok) {
                     console.warn('Interview prep query failed:', await res.text());
@@ -161,10 +168,12 @@
                     const taskId = task.id || task.task_id || '';
                     const description = task.text_content || task.description || '';
                     if (taskId && description) {
-                        fetch('/text/transcript-cleanup', {
+                        const chat_model = document.getElementById('llmModelSelect')?.value || '';
+                        const embedding_model = document.getElementById('embeddingModelSelect')?.value || '';
+                        fetch('/rag/transcript-cleanup', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ task_id: taskId, text: description, chat_model: document.getElementById('llmModelSelect')?.value || '' })
+                            body: JSON.stringify({ task_id: taskId, text: description, chat_model, embedding_model })
                         }).then(async res => {
                             const result = await res.json();
                             if (res.ok && result.cleaned_text) {
@@ -185,10 +194,12 @@
                     const taskId = task.id || task.task_id || '';
                     const description = task.text_content || task.description || '';
                     if (taskId && description) {
-                        fetch('/text/challenge-ideas', {
+                        const chat_model = document.getElementById('llmModelSelect')?.value || '';
+                        const embedding_model = document.getElementById('embeddingModelSelect')?.value || '';
+                        fetch('/rag/challenge-ideas', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ task_id: taskId, text: description, chat_model: document.getElementById('llmModelSelect')?.value || '' })
+                            body: JSON.stringify({ task_id: taskId, text: description, chat_model, embedding_model })
                         }).then(async res => {
                             const result = await res.json();
                             if (res.ok) {
@@ -210,10 +221,12 @@
                     const taskId = task.id || task.task_id || '';
                     const description = task.text_content || task.description || '';
                     if (taskId && description) {
-                        fetch('/text/generate-content', {
+                        const chat_model = document.getElementById('llmModelSelect')?.value || '';
+                        const embedding_model = document.getElementById('embeddingModelSelect')?.value || '';
+                        fetch('/rag/generate-content', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ task_id: taskId, text: description, chat_model: document.getElementById('llmModelSelect')?.value || '' })
+                            body: JSON.stringify({ task_id: taskId, text: description, chat_model, embedding_model })
                         }).then(async res => {
                             const result = await res.json();
                             if (res.ok) {
@@ -235,10 +248,12 @@
                     const taskId = task.id || task.task_id || '';
                     const description = task.text_content || task.description || '';
                     if (taskId && description) {
-                        fetch('/text/review', {
+                        const chat_model = document.getElementById('llmModelSelect')?.value || '';
+                        const embedding_model = document.getElementById('embeddingModelSelect')?.value || '';
+                        fetch('/rag/review', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ task_id: taskId, text: description, chat_model: document.getElementById('llmModelSelect')?.value || '' })
+                            body: JSON.stringify({ task_id: taskId, text: description, chat_model, embedding_model })
                         }).then(async res => {
                             const result = await res.json();
                             if (res.ok) {

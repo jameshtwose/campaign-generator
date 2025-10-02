@@ -103,7 +103,7 @@ async def generate_challenge_ideas(request: TextRequest):
                 upload_file_from_bytes(
                     filename=file_name,
                     data=content.encode("utf-8"),
-                    output_dir=LocalSettings().content_generation_dir,
+                    output_dir=LocalSettings().challenge_output_dir,
                 )
             except Exception as e:
                 print(

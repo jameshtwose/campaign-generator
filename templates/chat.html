@@ -13,8 +13,14 @@
         <h1 class="text-lg font-semibold">RAG Chat</h1>
         <div class="flex gap-2 items-center">
           <label for="chatModelSelect" class="text-sm font-medium text-gray-700 mr-1">Model:</label>
-          <select id="chatModelSelect" class="border rounded px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500 mr-2 min-w-[120px]">
+          <select id="chatModelSelect" class="border rounded px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500 min-w-[120px]">
             <option value="">Loading...</option>
+          </select>
+          <label for="embeddingModelSelect" class="text-sm font-medium text-gray-700 ml-2 mr-1">Embedding:</label>
+          <select id="embeddingModelSelect" class="border rounded px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500 min-w-[120px]">
+            <option value="nomic-embed-text:latest">nomic-embed-text:latest</option>
+            <option value="bge-base-en-v1.5">bge-base-en-v1.5</option>
+            <option value="text-embedding-ada-002">text-embedding-ada-002</option>
           </select>
           <button id="initBtn" class="bg-indigo-600 text-white px-3 py-2 rounded hover:bg-indigo-700">Initialize</button>
           <button id="reloadBtn" class="bg-yellow-600 text-white px-3 py-2 rounded hover:bg-yellow-700">Reload</button>
@@ -172,13 +178,15 @@
       if (!q) return;
       const mode = (modeAside && modeAside.value) ? modeAside.value : 'local';
       const top_k = parseInt((topkAside && topkAside.value) ? topkAside.value : '5', 10);
+      const chat_model = document.getElementById('chatModelSelect')?.value || '';
+      const embedding_model = document.getElementById('embeddingModelSelect')?.value || '';
       appendMessage('user', q);
       document.getElementById('question').value = '';
       try {
         const res = await fetch('/rag/query', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: q, mode, top_k })
+          body: JSON.stringify({ text: q, mode, top_k, chat_model, embedding_model })
         });
         if (!res.ok) {
           const text = await res.text();
